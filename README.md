@@ -1,4 +1,12 @@
-Project created with 'v0.dev'.
+## Setup 
+
+Create an .env file in the root of the project and add the following environment variables:
+
+```env
+    NEXT_PUBLIC_API_URL=http://localhost:3000/api
+```
+
+* Change the `NEXT_PUBLIC_API_URL` in the `.env` file to point to your API endpoint.
 
 ## Getting Started
 
@@ -31,6 +39,15 @@ Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/bui
 Improvements can be made in the following areas:
 
 1. **Data**
--- Get filters (locations, timezones, skills) from the backend and display them on the page instead of hardcoding them.
+
+* Get filters (locations, timezones, skills) from the backend instead of getting them from the requested data. 
+* You can not filter jobs by location, timezone, and skills that are not in the first page.
+* hourlyRateMax is hardcoded to 150, which is not ideal. It should be dynamic based on the data received from the API.
+
 2. **Error Handling**
--- Implement error handling for the API calls to ensure a better user experience.
+
+* Implement error handling for the API calls to ensure a better user experience.
+
+3. **Pagination**
+
+* The current implementation fetches only the first 10 jobs.

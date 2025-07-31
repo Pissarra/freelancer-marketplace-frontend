@@ -16,13 +16,16 @@ import { ChevronDown, ChevronUp, Filter, X } from "lucide-react"
 import { Label } from "@/components/ui/label"
 import {getAllFreelancers} from "@/app/service/freelancer.service";
 
+interface Skill {
+    id: number;
+    description: string;
+}
 interface FreelancerFilter {
   location?: string;
   timezone?: string;
   hourlyRateMin?: number;
   hourlyRateMax?: number;
   ratingMin?: number;
-  ratingMax?: number;
   availableOnly?: boolean;
   skills?: string[];
 }
@@ -35,7 +38,7 @@ interface Freelancer {
   hourlyRate: number;
   rating: number;
   available: boolean;
-  skills: string[];
+  skills: Skill[];
 }
 
 export default function DashboardPage() {
@@ -57,7 +60,15 @@ export default function DashboardPage() {
   // Get unique values for filter options
   const uniqueLocations = Array.from(new Set(freelancers.map((f) => f.location))).sort()
   const uniqueTimezones = Array.from(new Set(freelancers.map((f) => f.timezone))).sort()
-  const allSkills = Array.from(new Set(freelancers.flatMap((f) => f.skills))).sort()
+  const allSkills = freelancers
+      .flatMap(f => f.skills)
+      .reduce((acc: { id: number, description: string }[], skill) => {
+        if (!acc.find(s => s.id === skill.id)) {
+          acc.push(skill);
+        }
+        return acc;
+      }, [])
+      .sort((a, b) => a.description.localeCompare(b.description));
 
   useEffect(() => {
     const isAuthenticated = localStorage.getItem("isAuthenticated")
@@ -74,9 +85,10 @@ export default function DashboardPage() {
   }, [router])
 
   useEffect(() => {
-    // Fetch freelancers from API or use mock data
-    getAllFreelancers(1, 5)
+    console.info("Fetching freelancers with filters:", filters)
+    getAllFreelancers(1, 10, filters)
       .then((data) => {
+        console.info("Fetched freelancers:", data)
         setFreelancers(data)
       })
       .catch((error) => {
@@ -87,8 +99,10 @@ export default function DashboardPage() {
   const handleLogout = () => {
     localStorage.removeItem("isAuthenticated")
     localStorage.removeItem("userEmail")
+    localStorage.removeItem("accessToken")
     router.push("/")
   }
+
   const resetFilters = () => {
     setFilters({
       hourlyRateMin: 0,
@@ -96,6 +110,8 @@ export default function DashboardPage() {
       ratingMin: 0,
       availableOnly: false,
       skills: [],
+      timezone: undefined,
+      location: undefined,
     })
     setSearchTerm("")
   }
@@ -205,7 +221,6 @@ export default function DashboardPage() {
                       <SelectValue placeholder="All locations" />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="All locations">All locations</SelectItem>
                       {uniqueLocations.map((location) => (
                         <SelectItem key={location} value={location}>
                           {location}
@@ -226,7 +241,6 @@ export default function DashboardPage() {
                       <SelectValue placeholder="All timezones" />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="All timezones">All timezones</SelectItem>
                       {uniqueTimezones.map((timezone) => (
                         <SelectItem key={timezone} value={timezone}>
                           {timezone}
@@ -270,15 +284,17 @@ export default function DashboardPage() {
 
               {/* Minimum Rating */}
               <div className="space-y-2">
-                <Label>Minimum Rating: {filters.ratingMin} stars</Label>
+                <Label>Rating min: {'>'} {filters.ratingMin}</Label>
                 <div className="px-2">
                   <Slider
-                    value={[filters.ratingMin || 0]}
-                    onValueChange={([value]) => setFilters((prev) => ({ ...prev, minRating: value }))}
-                    max={5}
-                    min={0}
-                    step={0.1}
-                    className="w-full"
+                      value={[filters.ratingMin || 0]}
+                      onValueChange={([min]) =>
+                          setFilters((prev) => ({ ...prev, ratingMin: min }))
+                      }
+                      max={5}
+                      min={0}
+                      step={0.1}
+                      className="w-full"
                   />
                 </div>
               </div>
@@ -289,12 +305,12 @@ export default function DashboardPage() {
                 <div className="flex flex-wrap gap-2">
                   {allSkills.map((skill) => (
                     <Badge
-                      key={skill}
-                      variant={filters.skills?.includes(skill) ? "default" : "outline"}
+                      key={skill.description}
+                      variant={filters.skills?.includes(skill.description) ? "default" : "outline"}
                       className="cursor-pointer hover:bg-blue-100"
-                      onClick={() => toggleSkill(skill)}
+                      onClick={() => toggleSkill(skill.description)}
                     >
-                      {skill}
+                      {skill.description}
                     </Badge>
                   ))}
                 </div>
@@ -371,12 +387,12 @@ export default function DashboardPage() {
                       </TableCell>
                       <TableCell>
                         <div className="flex flex-wrap gap-1">
-                          {freelancer.skills.slice(0, 2).map((skill, index) => (
+                          {freelancer.skills?.slice(0, 2).map((skill, index) => (
                             <Badge key={index} variant="outline" className="text-xs">
-                              {skill}
+                              {skill.description}
                             </Badge>
                           ))}
-                          {freelancer.skills.length > 2 && (
+                          {freelancer.skills?.length > 2 && (
                             <Badge variant="outline" className="text-xs">
                               +{freelancer.skills.length - 2}
                             </Badge>

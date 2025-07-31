@@ -9,6 +9,10 @@ interface FreelancerFilter {
     skills?: string[];
 }
 
+interface Skill {
+    id: number;
+    description: string;
+}
 interface Freelancer {
     id: number;
     name: string;
@@ -17,10 +21,10 @@ interface Freelancer {
     hourlyRate: number;
     rating: number;
     available: boolean;
-    skills: string[];
+    skills: Skill[];
 }
 
-export async function getAllFreelancers(page: number, limit: 5, filters?: FreelancerFilter): Promise<Freelancer[]> {
+export async function getAllFreelancers(page: number, limit: 10, filters?: FreelancerFilter): Promise<Freelancer[]> {
     try {
         const accessToken = localStorage.getItem('accessToken');
         const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/freelancers?page=${page}&limit=${limit}`, {
