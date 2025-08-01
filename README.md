@@ -51,3 +51,40 @@ Improvements can be made in the following areas:
 3. **Pagination**
 
 * The current implementation fetches only the first 10 jobs.
+
+4. **Route Authentication Verification**
+
+Implement a centralized mechanism for route-level authentication. Instead of handling auth checks individually within each page or component.
+
+* middleware.ts for pre-request authentication and role-based access control
+```agsl
+   const protectedPaths = ['/dashboard']
+
+  const isProtectedRoute = protectedPaths.some((path) =>
+    pathname.startsWith(path)
+  )
+
+  if (isProtectedRoute) {
+    if (!token) {
+      // redirect to login
+    }
+
+    try {
+      const decoded = jwt.verify(token, SECRET)
+      // You can also check for roles/permissions here
+      // if (decoded.permission !== 'admin') { ... }
+    } catch (err) {
+      // redirect to login
+      ...
+    }
+  }
+```
+
+* Global layout for post-request authentication checks
+```agsl
+When useRouter is used in a layout.tsx file, its effects will apply globally to all pages within that layout's scope.
+This is useful for implementing global behaviors like route transition animations or authentication checks that should apply across multiple pages.
+```
+
+This ensures better maintainability and a cleaner separation of concerns across the application.
+
