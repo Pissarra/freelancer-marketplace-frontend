@@ -7,8 +7,7 @@ import { Badge } from "@/components/ui/badge"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
-import { LogOut, Users, Search } from "lucide-react"
-import { Input } from "@/components/ui/input"
+import { LogOut, Users } from "lucide-react"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Slider } from "@/components/ui/slider"
 import { Switch } from "@/components/ui/switch"
@@ -43,7 +42,6 @@ interface Freelancer {
 
 export default function DashboardPage() {
   const [freelancers, setFreelancers] = useState<Freelancer[]>([])
-  const [searchTerm, setSearchTerm] = useState("")
   const [userEmail, setUserEmail] = useState("")
   const router = useRouter()
 
@@ -85,15 +83,21 @@ export default function DashboardPage() {
   }, [router])
 
   useEffect(() => {
-    console.info("Fetching freelancers with filters:", filters)
-    getAllFreelancers(1, 10, filters)
-      .then((data) => {
-        console.info("Fetched freelancers:", data)
-        setFreelancers(data)
-      })
-      .catch((error) => {
-        console.error("Error fetching freelancers:", error)
-      })
+    function fetchFreelancers() {
+      console.info("Fetching freelancers with filters:", filters)
+      getAllFreelancers(1, 10, filters)
+          .then((data) => {
+            console.info("Fetched freelancers:", data)
+            setFreelancers(data)
+          })
+          .catch((error) => {
+            console.error("Error fetching freelancers:", error)
+          })
+    }
+
+    // small debounce logic
+    const timeout = setTimeout(fetchFreelancers, 200)
+    return () => clearTimeout(timeout)
   }, [filters])
 
   const handleLogout = () => {
@@ -113,7 +117,6 @@ export default function DashboardPage() {
       timezone: undefined,
       location: undefined,
     })
-    setSearchTerm("")
   }
 
   const toggleSkill = (skill: string) => {
@@ -324,15 +327,15 @@ export default function DashboardPage() {
           <CardHeader>
             <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center space-y-4 sm:space-y-0">
               <CardTitle>Freelancers List</CardTitle>
-              <div className="relative w-full sm:w-80">
-                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
-                <Input
-                  placeholder="Search by name or skill..."
-                  value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
-                  className="pl-10"
-                />
-              </div>
+              {/*<div className="relative w-full sm:w-80">*/}
+              {/*  <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />*/}
+              {/*  <Input*/}
+              {/*    placeholder="Search by name or skill..."*/}
+              {/*    value={searchTerm}*/}
+              {/*    onChange={(e) => setSearchTerm(e.target.value)}*/}
+              {/*    className="pl-10"*/}
+              {/*  />*/}
+              {/*</div>*/}
             </div>
           </CardHeader>
           <CardContent>
@@ -387,14 +390,14 @@ export default function DashboardPage() {
                       </TableCell>
                       <TableCell>
                         <div className="flex flex-wrap gap-1">
-                          {freelancer.skills?.slice(0, 2).map((skill, index) => (
+                          {freelancer.skills?.slice(0, 3).map((skill, index) => (
                             <Badge key={index} variant="outline" className="text-xs">
                               {skill.description}
                             </Badge>
                           ))}
-                          {freelancer.skills?.length > 2 && (
+                          {freelancer.skills?.length > 3 && (
                             <Badge variant="outline" className="text-xs">
-                              +{freelancer.skills.length - 2}
+                              +{freelancer.skills.length - 3}
                             </Badge>
                           )}
                         </div>
